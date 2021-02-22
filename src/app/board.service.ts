@@ -20,13 +20,13 @@ export class BoardService {
       this.board.push(numrow);
     }
 
-    this.assignPieces(0, true, 'black-piece');
-    this.assignPieces(1, false, 'black-piece');
-    this.assignPieces(2, true, 'black-piece');
+    this.assignPieces(0, false, 'black-piece');
+    this.assignPieces(1, true, 'black-piece');
+    this.assignPieces(2, false, 'black-piece');
 
-    this.assignPieces(5, false, 'white-piece');
-    this.assignPieces(6, true, 'white-piece');
-    this.assignPieces(7, false, 'white-piece');
+    this.assignPieces(5, true, 'white-piece');
+    this.assignPieces(6, false, 'white-piece');
+    this.assignPieces(7, true, 'white-piece');
 
     console.log(this.board);
     return this.board;
