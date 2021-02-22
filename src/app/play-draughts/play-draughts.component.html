@@ -2,13 +2,14 @@
     <div class="col-md-8">
         <div class="row" *ngFor="let i of [0, 1, 2, 3, 4, 5, 6, 7]">
                 <div *ngFor="let j of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']" class="col-md-1 square{{i}}{{j}}" (click)="move(i, j, $event)" [ngClass]="getSquareColour([i, j])">
-                    <div class="piece" [ngClass]="checkPiece(i, j)" (click)="select(i, j, $event)">                                       
+                    <div class="piece" [ngClass]="checkPiece(i, j)" (click)="select(i, j, $event)"> 
+                        {{i}}{{j}}                                      
                     </div>
                 </div>
             </div>
         </div>
     <div class="col-md-4">
-        <div class="row">
+        <div class="row" *ngIf="!gameStarted">
             <button type="button" class="btn btn-light" (click)="tossCoin()">Click to start</button>
         </div>
         <div class="row" *ngIf="gameStarted">
@@ -19,7 +20,7 @@
                 <div class="player">{{ player }}</div>
             </div>
             <div class="row">
-                <h2>Who's go is it?</h2>
+                <h2>Whose go is it?</h2>
             </div>
             <div class="row">
                 <div class="in-play">{{ currentColour | friendlyName }} is the current player</div>

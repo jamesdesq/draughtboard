@@ -14,6 +14,8 @@ It was generated with [Angular CLI](https://github.com/angular/angular-cli) vers
 # Building, testing and deploying
 ## Development server
 
+If you want to run this locally, clone the repo to your machine, `cd` into the docroot and run `npm install`.
+
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
 ## Code scaffolding

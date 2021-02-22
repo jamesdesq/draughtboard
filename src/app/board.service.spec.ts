@@ -34,7 +34,7 @@ describe('BoardServiceService', () => {
 
     const row = board[0];
 
-    expect(row.B.colour).toBe('black-piece');
+    expect(row.A.colour).toBe('black-piece');
 
   })
 });

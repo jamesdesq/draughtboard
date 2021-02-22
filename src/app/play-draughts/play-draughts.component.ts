@@ -1,5 +1,4 @@
-import { ConditionalExpr, ThrowStmt } from '@angular/compiler';
-import { Component, ComponentFactoryResolver, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { BoardService } from '../board.service';
 import { draughtsPiece } from './draughts-piece.interface';
 import { coordinates } from './coordinates.interface';
@@ -50,7 +49,7 @@ export class PlayDraughtsComponent implements OnInit {
 
   }
 
-  select(yPos: number, xPos: string, event) {
+  select(yPos: number, xPos: string, event): void {
 
     if (!this.gameStarted) {
       return null;
@@ -69,7 +68,6 @@ export class PlayDraughtsComponent implements OnInit {
     // Can't select if you've already selected!
     if (!this.selected.length) {
       
-
       this.adjacents = [];
       this.checkAdjacents(classes[1]);
 
@@ -92,10 +90,12 @@ export class PlayDraughtsComponent implements OnInit {
         colour: classes[1]
       }
 
+      if (classes[3] && classes[3] === 'king') {
+        selected.king = true;
+      }
+
       if (this.possibleTakers.length) {
-
         const posibleSelection = yPos+xPos;
-
         if (this.possibleTakers.includes(posibleSelection)) { 
           this.selected.push(selected);    
         }
@@ -134,7 +134,6 @@ export class PlayDraughtsComponent implements OnInit {
   }
 
   getTarget(taker: coordinates, victim: coordinates): boolean { 
-
     const ytarget = taker.y < victim.y ? victim.y + 1 : victim.y - 1
     if (ytarget < 0 || ytarget > 7) {
       return false;
@@ -184,17 +183,15 @@ export class PlayDraughtsComponent implements OnInit {
 
 
   move(yPos, xPos, event): boolean | void {
-    console.log('I am the length: ', this.selected.length);
     if (this.selected.length > 0) { 
-      console.log('I should not happen');
       const classes = event.target.className.split(" ");
-
-      console.log(this.allowed(this.selected[0], [yPos, xPos]));
+      console.log(classes);
 
       if (classes[2] !== 'occupied') { 
         const adjacents = this.adjacentFactory(yPos, xPos, this.selected[0].colour);
         this.selected[0].adjacents = adjacents;
-        let movable = this.selected[0];
+        let movable: draughtsPiece = this.selected[0];
+        console.log('I am moveable', movable);
         if (this.possibleTakers.length > 0) { 
           this.takePieces(yPos, xPos, movable);
         }
@@ -206,13 +203,29 @@ export class PlayDraughtsComponent implements OnInit {
         this.selected = [];
         movable.yindex = yPos;
         movable.xindex = xPos;
+        // Check if we need to make it a king
+        movable = this.makeKing(yPos, movable);
+        console.log('movable: ', movable);
+
         this.board[yPos][xPos] = movable;
+        // And flip the colour so it's the other player's turn.
         this.currentColour = this.flipColour(this.currentColour);       
       }
     }
   }
 
-  takePieces(yPos, xPos, movable) {
+  makeKing(yPos: number, movable: draughtsPiece): draughtsPiece { 
+
+    if (movable.colour === 'white-piece' && yPos === 0) { 
+      movable.king = true; 
+    }
+    if (movable.colour === 'black-piece' && yPos === 7) {
+      movable.king = true;
+    }
+    return movable;
+  }
+
+  takePieces(yPos: number, xPos: string, movable: draughtsPiece):void {
 
     let target = this.getPositionAsObject(yPos+xPos);
 
@@ -231,7 +244,6 @@ export class PlayDraughtsComponent implements OnInit {
 
     let victimx = this.leftOrRight(source.x, target.x);
 
-    console.log('The victim is in: ', victimy, this.row[victimx]);
     if (this.board[victimy][this.row[victimx]].colour === 'white-piece') { 
       this.takenWhite++;
     }
@@ -279,7 +291,11 @@ export class PlayDraughtsComponent implements OnInit {
 
   checkPiece(yPos: number, xPos: string) {    
     if (this.board[yPos][xPos]['colour']) {
-      return this.board[yPos][xPos]['colour'] + ' occupied';
+      let classNames = this.board[yPos][xPos]['colour'] + ' occupied'; 
+      if (this.board[yPos][xPos]['king']) { 
+        classNames += ' king';
+      }
+      return classNames;
     }
   }
 
@@ -290,7 +306,6 @@ export class PlayDraughtsComponent implements OnInit {
 
     directions.forEach((direction) => {
       let adjacent = this.adjacentDirection(yPos, xPos, currentColour, direction);
-      console.log('I am the adjacent: ', adjacent);
       if (adjacent) {
         this.adjacents.push(adjacent);
       }
@@ -322,26 +337,34 @@ export class PlayDraughtsComponent implements OnInit {
     }
   }
 
-  allowed(currentPiece, target): boolean {  
-    console.log('current: ' , currentPiece, 'target: ', target);
+  allowed(currentPiece: draughtsPiece, target: Array<any>): boolean {  
+
+    console.log(currentPiece);
     const sourceY = currentPiece.yindex;
     const sourceX = this.row.indexOf(currentPiece.xindex);
     const targetY = target[0];
     const targetX = this.row.indexOf(target[1]);
 
+    const allowed = [1, -1];
+
+    if (currentPiece.king) { 
+      if (targetY === sourceY || targetY - sourceY < -1 || targetY - sourceY > 1) {  
+        return false;
+      }  
+      if (allowed.indexOf(targetX - sourceX) < 0) { 
+        return false;
+      }
+      return true;     
+    }
+
     let allowedYmove = currentPiece.colour === 'black-piece' ? 1 : -1;
 
     if (targetY === sourceY || targetY - sourceY != allowedYmove) {
-      console.log('oh dear');
       return false;
     }
 
-    const allowed = [1, -1];
-
-    console.log('Target and source' , targetX, sourceX);
 
     if (allowed.indexOf(targetX - sourceX) < 0) { 
-      console.log('Oh dear, Not allowed');
       return false;
     }  
     return true;
