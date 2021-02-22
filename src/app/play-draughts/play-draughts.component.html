@@ -13,29 +13,31 @@
             <button type="button" class="btn btn-primary" (click)="tossCoin()">Who plays black?</button>
         </div>
         <div class="row">
+            <h2>Who plays first?</h2>
+        </div>
+        <div class="row">
             <div class="player">{{ player }}</div>
+        </div>
+        <div class="row">
+            <h2>Who's go is it?</h2>
         </div>
         <div class="row">
             <div class="in-play">{{ currentColour }} is the current player</div>
         </div>
         <div class="row">
-            <div class="in-play">{{ message }}</div>
+            <h2>Score</h2>          
         </div>
         <div class="row">
-            <h2>Possible takers</h2>
-            <pre>{{ possibleTakers | json }}</pre>
+            <p>Black has taken {{ takenWhite }} pieces.</p>          
         </div>
         <div class="row">
-            <h2>Selected</h2>
-            <pre>{{ selected | json }}</pre>
+            <p>White has taken {{ takenBlack }} pieces</p>          
         </div>
         <div class="row">
-            <h2>Debug messages</h2>
-            <pre>{{ debugMessages | json }}</pre>
+            <h2>Messages</h2>
         </div>
         <div class="row">
-            <h2>Adjacents</h2>
-            <pre>{{ adjacents | json }}</pre>
+            <div *ngFor="let message of messages">{{ message }}</div>          
         </div>
     </div>
 </div>

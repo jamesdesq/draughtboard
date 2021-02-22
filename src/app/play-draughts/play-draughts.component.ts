@@ -1,6 +1,8 @@
 import { ConditionalExpr, ThrowStmt } from '@angular/compiler';
 import { Component, ComponentFactoryResolver, OnInit } from '@angular/core';
+import { BoardService } from '../board.service';
 import { draughtsPiece } from './draughts-piece.interface';
+import { coordinates } from './coordinates.interface';
 
 
 @Component({
@@ -28,41 +30,40 @@ export class PlayDraughtsComponent implements OnInit {
 
   board = [];
 
+  takenBlack = 0;
+  
+  takenWhite = 0;
+
   selected = [];
 
   possibleTakers = [];
 
-  message = '';
+  messages = [];
   
-  constructor() { }
+  constructor(private boardService: BoardService) { 
+    this.board = boardService.generateBoard();
+  }
 
   ngOnInit(): void {
 
-
-    for (let i = 0; i < 8; i++) { 
-      let numrow = { A: "", B: "", C: "", D: "", E: "", F: "", G: "", H: ""};
-      this.board.push(numrow);
-    }
-
-    this.assignPieces(0, true, 'black-piece');
-    this.assignPieces(1, false, 'black-piece');
-    this.assignPieces(2, true, 'black-piece');
-
-    this.assignPieces(5, false, 'white-piece');
-    this.assignPieces(6, true, 'white-piece');
-    this.assignPieces(7, false, 'white-piece');
-
-    console.log(this.board);
   }
 
   select(yPos: number, xPos: string, event) {
-    
+
+    const classes = event.target.className.split(" ");
+    const colourInPlay = classes[1];
+    this.messages = [];
+
+    if (colourInPlay !== this.currentColour) {
+
+      this.messages.push(`It's not your turn!`);
+      return null;
+    }
+
     // Can't select if you've already selected!
     if (!this.selected.length) {
       
-      const classes = event.target.className.split(" ");
 
-      const colourInPlay = classes[1];
       this.adjacents = [];
       this.checkAdjacents(classes[1]);
 
@@ -93,7 +94,7 @@ export class PlayDraughtsComponent implements OnInit {
           this.selected.push(selected);    
         }
         else {
-          console.log('Not allowed!');
+          this.messages.push(`There's another piece you need to play!`);
         }
       }
       else {
@@ -119,7 +120,6 @@ export class PlayDraughtsComponent implements OnInit {
     const v = this.getPositionAsObject(victim);
 
     if (this.rightDirection(t, v, colourInPlay)) {
-      console.log('I am the taker: ', taker);
       if (this.getTarget(t, v)) { 
         return taker;
       } 
@@ -127,7 +127,7 @@ export class PlayDraughtsComponent implements OnInit {
     return null;
   }
 
-  getTarget(taker, victim) { 
+  getTarget(taker: coordinates, victim: coordinates): boolean { 
 
     const ytarget = taker.y < victim.y ? victim.y + 1 : victim.y - 1
     if (ytarget < 0 || ytarget > 7) {
@@ -142,8 +142,6 @@ export class PlayDraughtsComponent implements OnInit {
     if (this.board[ytarget][letterX] !== "") { 
       return false;
     }
-
-    console.log('Target coordinates: ', ytarget, letterX)
     return true;
   }
 
@@ -166,11 +164,11 @@ export class PlayDraughtsComponent implements OnInit {
     return false;
   }
 
-  getPositionAsObject(position: string) { 
+  getPositionAsObject(position: string): coordinates { 
     if (position.length === 2) { 
       const numPos = position.split("");
       
-      const coordinates = {
+      const coordinates: coordinates = {
         y: Number(numPos[0]),
         x: this.row.indexOf(numPos[1]), 
       }
@@ -202,7 +200,8 @@ export class PlayDraughtsComponent implements OnInit {
         this.selected = [];
         movable.yindex = yPos;
         movable.xindex = xPos;
-        this.board[yPos][xPos] = movable;        
+        this.board[yPos][xPos] = movable;
+        this.currentColour = this.flipColour(this.currentColour);       
       }
     }
   }
@@ -212,8 +211,6 @@ export class PlayDraughtsComponent implements OnInit {
     let target = this.getPositionAsObject(yPos+xPos);
 
     let source = this.getPositionAsObject(movable.yindex+movable.xindex);
-
-    console.log('I am in takepieces: ', source, target);
 
     let victimy = 0;
     if (source.y - target.y === -2) {
@@ -229,6 +226,13 @@ export class PlayDraughtsComponent implements OnInit {
     let victimx = this.leftOrRight(source.x, target.x);
 
     console.log('The victim is in: ', victimy, this.row[victimx]);
+    if (this.board[victimy][this.row[victimx]].colour === 'white-piece') { 
+      this.takenWhite++;
+    }
+    else {
+      this.takenBlack++;
+    }
+
     this.board[victimy][this.row[victimx]] = "";
   } 
 
@@ -246,13 +250,9 @@ export class PlayDraughtsComponent implements OnInit {
   checkAdjacents(colour): void{
  
     // When we select a piece, we want to make sure there are no other pieces that must be played: 
-
-    // colour = this.flipColour(colour);
-
     for (let i = 0; i < this.board.length; i++) {
       for (let xposition in this.board[i]) { 
         if (this.board[i][xposition].colour === colour) { 
-          // if (this.board[i][xposition].adjacents && this.board[i][xposition].adjacents.length) {
             
           const adjacent = this.adjacentFactory(i, xposition, colour, false); 
           
@@ -262,7 +262,6 @@ export class PlayDraughtsComponent implements OnInit {
         }  
       }
     }
-    // return adjacents;
   }
 
   flipColour(colour) { 
@@ -307,9 +306,6 @@ export class PlayDraughtsComponent implements OnInit {
     if ((takeableY < 8 && takeableNumX < 8 && takeableY >= 0 && takeableNumX >= 0)) { 
       let takeableX = this.row[takeableNumX];
       if (this.board[takeableY][takeableX]['colour'] === takeableColor) {     
-        // Add the moved piece to the takeable piece because it works both ways
-        // this.debugMessages.push(`The ${currentColour} piece has been moved to ${yPos}${xPos}`);
-        // this.debugMessages.push(`We looked in ${takeableY}${takeableX} and found a ${takeableColor} piece`);
         const takeableLocation = takeableY+takeableX;
         const takingLocation = yPos+xPos;
         return {
@@ -364,73 +360,9 @@ export class PlayDraughtsComponent implements OnInit {
 
   tossCoin() {
     let player = Math.floor(Math.random() * 2) + 1;
-    this.player = 'Player ' + player;
+    this.player = 'Player ' + player + ' plays first';
   }
+}
 
-  assignPieces(row: number, leftAlign: boolean, colour: 'black-piece' | 'white-piece') {
-
-    const piece: draughtsPiece = { 
-      colour: colour,
-      adjacents: []
-    }
-    
-    for (let i = 0; i < this.boardLength; i++) { 
-      if (leftAlign) { 
-        if (i % 2 !== 0) {
-          piece.yindex = row;
-          piece.xindex = this.row[i]; 
-          this.board[row][this.row[i]] = piece;
-        }
-      }
-      else { 
-        if (i % 2 === 0) {
-          piece.yindex = row;
-          piece.xindex = this.row[i];
-          this.board[row][this.row[i]] = piece;
-        }
-      }
-    }    
-  }
-
-  haveTo(currentPiece, target, xDir, yDir) {
-
-    console.log('Start position', currentPiece);
-
-    let xIterator = xDir = 'right' ? 1 : -1;
-
-    let yIterator = yDir = 'down' ? 1 : -1;
-
-    
-      let takeableY = currentPiece[0][0] + yIterator;
-      let takeableNumX = this.row.indexOf(currentPiece[0][1]) + xIterator;
-
-      if ((takeableY < 8 && takeableNumX < 8 && takeableY >= 0 && takeableNumX >= 0)) { 
-        let takeableX = this.row[takeableNumX];
-
-        if (this.board[takeableY][takeableX] === 'white-piece') { 
-          let landableY = takeableY + yIterator;
-          let landableNumX = takeableNumX + xIterator;
-  
-          if (landableY < 8 && landableNumX < 8 && landableY >= 0 && landableNumX >= 0) { 
-            let landableX = this.row[landableNumX];
-            if (this.board[landableY][landableX] === "") { 
-              
-              console.log('LandableX: ', landableX == target[1]);
-              console.log('LandableY: ', landableY == target[0]);
-              console.log('Target ', target);
-              if (target[1] == landableX && target[0] == landableY) { 
-  
-                console.log("Do we get here?");
-                // this.board[takeableY][takeableX] = "";
-                return currentPiece;
-              }             
-            }
-          }
-        }
-      }
-
-    return false; 
-  }
- }
 
  
