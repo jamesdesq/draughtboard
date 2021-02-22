@@ -19,6 +19,8 @@ export class PlayDraughtsComponent implements OnInit {
   debugMessages = [];
 
   boardLength = 8; 
+
+  gameStarted = false;
   
   boardHeight = 8;
 
@@ -49,6 +51,10 @@ export class PlayDraughtsComponent implements OnInit {
   }
 
   select(yPos: number, xPos: string, event) {
+
+    if (!this.gameStarted) {
+      return null;
+    }
 
     const classes = event.target.className.split(" ");
     const colourInPlay = classes[1];
@@ -361,6 +367,7 @@ export class PlayDraughtsComponent implements OnInit {
   tossCoin() {
     let player = Math.floor(Math.random() * 2) + 1;
     this.player = 'Player ' + player + ' plays first';
+    this.gameStarted = true;
   }
 }
 

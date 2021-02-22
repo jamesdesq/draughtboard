@@ -9,34 +9,36 @@
         </div>
     <div class="col-md-4">
         <div class="row">
-            <button type="button" class="btn btn-primary" (click)="tossCoin()">Who plays black?</button>
+            <button type="button" class="btn btn-light" (click)="tossCoin()">Click to start</button>
         </div>
-        <div class="row">
-            <h2>Who plays first?</h2>
-        </div>
-        <div class="row">
-            <div class="player">{{ player }}</div>
-        </div>
-        <div class="row">
-            <h2>Who's go is it?</h2>
-        </div>
-        <div class="row">
-            <div class="in-play">{{ currentColour | friendlyName }} is the current player</div>
-        </div>
-        <div class="row">
-            <h2>Score</h2>          
-        </div>
-        <div class="row">
-            <p>Black has taken {{ takenWhite }} pieces.</p>          
-        </div>
-        <div class="row">
-            <p>White has taken {{ takenBlack }} pieces</p>          
-        </div>
-        <div class="row">
-            <h2>Messages</h2>
-        </div>
-        <div class="row">
-            <div *ngFor="let message of messages">{{ message }}</div>          
+        <div class="row" *ngIf="gameStarted">
+            <div class="row">
+                <h2>Who plays first?</h2>
+            </div>
+            <div class="row">
+                <div class="player">{{ player }}</div>
+            </div>
+            <div class="row">
+                <h2>Who's go is it?</h2>
+            </div>
+            <div class="row">
+                <div class="in-play">{{ currentColour | friendlyName }} is the current player</div>
+            </div>
+            <div class="row">
+                <h2>Score</h2>          
+            </div>
+            <div class="row">
+                <p>Black has taken {{ takenWhite }} pieces.</p>          
+            </div>
+            <div class="row">
+                <p>White has taken {{ takenBlack }} pieces</p>          
+            </div>
+            <div class="row">
+                <h2>Messages</h2>
+            </div>
+            <div class="row">
+                <div *ngFor="let message of messages">{{ message }}</div>          
+            </div>
         </div>
     </div>
 </div>
