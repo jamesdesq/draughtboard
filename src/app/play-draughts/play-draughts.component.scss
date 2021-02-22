@@ -1,0 +1,33 @@
+.col-md-1 {
+    border: 1px gray solid;
+    height: 4em;
+    padding: 0;
+}
+
+.row { 
+    width: 100%;
+}
+
+.black {
+    background: #000;
+}
+
+.piece { 
+    margin: 5px auto;
+}
+
+.black-piece { 
+    height: 3em;
+    width: 3em;
+    border-radius: 50%;
+    border: 1px solid white;
+    background: black;
+}
+
+.white-piece {
+    height: 3em;
+    width: 3em;
+    border-radius: 50%; 
+    border: 1px solid black;
+    background: white;
+}

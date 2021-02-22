@@ -1,0 +1,41 @@
+<div class="row">
+    <div class="col-md-8">
+        <div class="row" *ngFor="let i of [0, 1, 2, 3, 4, 5, 6, 7]">
+                <div *ngFor="let j of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']" class="col-md-1 square{{i}}{{j}}" (click)="move(i, j, $event)" [ngClass]="getSquareColour([i, j])">
+                    <div class="piece" [ngClass]="checkPiece(i, j)" (click)="select(i, j, $event)"> 
+                        {{i}}{{j}}                                          
+                    </div>
+                </div>
+            </div>
+        </div>
+    <div class="col-md-4">
+        <div class="row">
+            <button type="button" class="btn btn-primary" (click)="tossCoin()">Who plays black?</button>
+        </div>
+        <div class="row">
+            <div class="player">{{ player }}</div>
+        </div>
+        <div class="row">
+            <div class="in-play">{{ currentColour }} is the current player</div>
+        </div>
+        <div class="row">
+            <div class="in-play">{{ message }}</div>
+        </div>
+        <div class="row">
+            <h2>Possible takers</h2>
+            <pre>{{ possibleTakers | json }}</pre>
+        </div>
+        <div class="row">
+            <h2>Selected</h2>
+            <pre>{{ selected | json }}</pre>
+        </div>
+        <div class="row">
+            <h2>Debug messages</h2>
+            <pre>{{ debugMessages | json }}</pre>
+        </div>
+        <div class="row">
+            <h2>Adjacents</h2>
+            <pre>{{ adjacents | json }}</pre>
+        </div>
+    </div>
+</div>
