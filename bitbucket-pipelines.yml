@@ -1,0 +1,12 @@
+image: jamesdesq/node_ng:master
+
+pipelines:
+  default:
+    - step:
+        script: 
+          - npm install
+          - npm install -g @angular/cli
+          - ng build --prod
+          - cd dist/draughts
+          - aws s3 ls s3://jamesd-draughts
+          - aws s3 sync . s3://jamesd-draughts
