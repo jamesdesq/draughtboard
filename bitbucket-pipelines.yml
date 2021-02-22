@@ -10,7 +10,7 @@ pipelines:
           - cd dist/draughts
           - aws s3 ls s3://jamesd-draughts
           - aws s3 sync . s3://jamesd-draughts
-          - git remote add origin git@github.com:jamesdesq/draughtboard.git
+          - git remote add sync git@github.com:jamesdesq/draughtboard.git
           - git checkout -b feature/publish-to-github
           - cd ../..
           - rm -rf ./src/environments
