@@ -6,6 +6,8 @@ https://github.com/davidwhitney/CodeDojos/tree/master/Draughts
 
 It was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.2.0.
 
+You can see a [hosted version of the software here](http://jamesd-draughts.s3-website.eu-west-2.amazonaws.com/).
+
 ## The rules: 
 - Click the "Who plays black" button to find out which player is playing black
 - Click a piece to select it, then click the square you want to move it to

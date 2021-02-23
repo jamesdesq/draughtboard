@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { BoardService } from '../board.service';
+import { BoardService } from '../services/board.service';
 import { draughtsPiece } from './draughts-piece.interface';
 import { coordinates } from './coordinates.interface';
+import { MoveService } from '../services/move.service';
 
 
 @Component({
@@ -13,17 +14,13 @@ export class PlayDraughtsComponent implements OnInit {
 
   row = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-  numrow = { A: "", B: "", C: "", D: "", E: "", F: "", G: ""};
-
-  debugMessages = [];
-
   boardLength = 8; 
 
   gameStarted = false;
   
   boardHeight = 8;
 
-  player = '????';
+  player = '?';
 
   adjacents = [];
 
@@ -41,12 +38,14 @@ export class PlayDraughtsComponent implements OnInit {
 
   messages = [];
   
-  constructor(private boardService: BoardService) { 
+  constructor(
+    private boardService: BoardService,
+    private moveService: MoveService,
+    ) { 
     this.board = boardService.generateBoard();
   }
 
   ngOnInit(): void {
-
   }
 
   select(yPos: number, xPos: string, event): void {
@@ -122,10 +121,10 @@ export class PlayDraughtsComponent implements OnInit {
       } 
     }
 
-    const t = this.getPositionAsObject(taker);
-    const v = this.getPositionAsObject(victim);
+    const t = this.moveService.getPositionAsObject(taker);
+    const v = this.moveService.getPositionAsObject(victim);
 
-    if (this.rightDirection(t, v, colourInPlay)) {
+    if (this.moveService.rightDirection(t, v, colourInPlay)) {
       if (this.getTarget(t, v)) { 
         return taker;
       } 
@@ -149,38 +148,6 @@ export class PlayDraughtsComponent implements OnInit {
     }
     return true;
   }
-
-  rightDirection(taker, victim, colourInPlay): boolean { 
-    
-    switch(colourInPlay) {
-      case 'black-piece':  
-        // The vicitim's y position must be one greater than the takers
-        if (victim.y - taker.y === 1) {
-          return true;
-        }
-        break;
-
-      case 'white-piece': 
-        // The victim's y position must be one less than taker's
-        if (taker.y - victim.y === 1) {
-          return true;
-        }
-    }
-    return false;
-  }
-
-  getPositionAsObject(position: string): coordinates { 
-    if (position.length === 2) { 
-      const numPos = position.split("");
-      
-      const coordinates: coordinates = {
-        y: Number(numPos[0]),
-        x: this.row.indexOf(numPos[1]), 
-      }
-      return coordinates;
-    }   
-  }
-
 
   move(yPos, xPos, event): boolean | void {
     if (this.selected.length > 0) { 
@@ -206,12 +173,26 @@ export class PlayDraughtsComponent implements OnInit {
         // Check if we need to make it a king
         movable = this.makeKing(yPos, movable);
         console.log('movable: ', movable);
-
         this.board[yPos][xPos] = movable;
+        // Check if there are any more moves we need to do
+        if (this.additionalMoves(movable)) { 
+          this.messages.push('There are more pieces to take');
+        }
         // And flip the colour so it's the other player's turn.
         this.currentColour = this.flipColour(this.currentColour);       
       }
     }
+  }
+
+  additionalMoves(movable: draughtsPiece): boolean { 
+
+    console.log('I am the movable piece', movable);
+
+    // Reset the adjacents list
+    this.adjacents = [];
+    
+
+    return false;
   }
 
   makeKing(yPos: number, movable: draughtsPiece): draughtsPiece { 
@@ -227,9 +208,9 @@ export class PlayDraughtsComponent implements OnInit {
 
   takePieces(yPos: number, xPos: string, movable: draughtsPiece):void {
 
-    let target = this.getPositionAsObject(yPos+xPos);
+    const target = this.moveService.getPositionAsObject(yPos+xPos);
 
-    let source = this.getPositionAsObject(movable.yindex+movable.xindex);
+    const source = this.moveService.getPositionAsObject(movable.yindex+movable.xindex);
 
     let victimy = 0;
     if (source.y - target.y === -2) {
@@ -242,7 +223,7 @@ export class PlayDraughtsComponent implements OnInit {
       victimy = source.y - 1;
     } 
 
-    let victimx = this.leftOrRight(source.x, target.x);
+    const victimx = this.leftOrRight(source.x, target.x);
 
     if (this.board[victimy][this.row[victimx]].colour === 'white-piece') { 
       this.takenWhite++;
@@ -250,7 +231,6 @@ export class PlayDraughtsComponent implements OnInit {
     else {
       this.takenBlack++;
     }
-
     this.board[victimy][this.row[victimx]] = "";
   } 
 
@@ -261,24 +241,6 @@ export class PlayDraughtsComponent implements OnInit {
     }
     else {
       return sourceX + 1;
-    }
-  }
-
-
-  checkAdjacents(colour): void{
- 
-    // When we select a piece, we want to make sure there are no other pieces that must be played: 
-    for (let i = 0; i < this.board.length; i++) {
-      for (let xposition in this.board[i]) { 
-        if (this.board[i][xposition].colour === colour) { 
-            
-          const adjacent = this.adjacentFactory(i, xposition, colour, false); 
-          
-          if (adjacent) { 
-            this.adjacents.push(adjacent);
-          }
-        }  
-      }
     }
   }
 
@@ -299,32 +261,43 @@ export class PlayDraughtsComponent implements OnInit {
     }
   }
 
- 
-  adjacentFactory(yPos, xPos, currentColour, king = false): Object | void { 
+  checkAdjacents(colour: string): void{
+    // When we select a piece, we want to make sure there are no other pieces that must be played: 
+   for (let i = 0; i < this.board.length; i++) {
+     for (let xposition in this.board[i]) { 
+       if (this.board[i][xposition].colour === colour) { 
+           
+         const adjacent = this.adjacentFactory(i, xposition, colour, false); 
+         
+         if (adjacent) { 
+           this.adjacents.push(adjacent);
+         }
+       }  
+     }
+   }
+ }
 
-    let directions = ['left', 'right'];
-
+   adjacentFactory(yPos: number, xPos: string, currentColour: string, king = false): Object | void { 
+    const directions = ['left', 'right'];
     directions.forEach((direction) => {
       let adjacent = this.adjacentDirection(yPos, xPos, currentColour, direction);
       if (adjacent) {
         this.adjacents.push(adjacent);
       }
     });
-
-
   }
 
-  adjacentDirection(yPos, xPos, currentColour, xDir): {} { 
+  adjacentDirection(yPos: number, xPos: string, currentColour: string, xDir: string): {} { 
     
-    let xIterator = xDir === 'right' ? 1 : -1;
-    let yIterator = currentColour === 'black-piece' ? 1 : -1;
+    const xIterator = xDir === 'right' ? 1 : -1;
+    const yIterator = currentColour === 'black-piece' ? 1 : -1;
 
-    let takeableColor = currentColour === 'black-piece' ? 'white-piece' : 'black-piece';
+    const takeableColor = currentColour === 'black-piece' ? 'white-piece' : 'black-piece';
     
-    let takeableY = yPos + yIterator;
-    let takeableNumX = this.row.indexOf(xPos) + xIterator;
+    const takeableY = yPos + yIterator;
+    const takeableNumX = this.row.indexOf(xPos) + xIterator;
 
-    if ((takeableY < 8 && takeableNumX < 8 && takeableY >= 0 && takeableNumX >= 0)) { 
+    if ((takeableY < this.boardLength && takeableNumX < this.boardLength && takeableY >= 0 && takeableNumX >= 0)) { 
       let takeableX = this.row[takeableNumX];
       if (this.board[takeableY][takeableX]['colour'] === takeableColor) {     
         const takeableLocation = takeableY+takeableX;
@@ -338,7 +311,6 @@ export class PlayDraughtsComponent implements OnInit {
   }
 
   allowed(currentPiece: draughtsPiece, target: Array<any>): boolean {  
-
     console.log(currentPiece);
     const sourceY = currentPiece.yindex;
     const sourceX = this.row.indexOf(currentPiece.xindex);

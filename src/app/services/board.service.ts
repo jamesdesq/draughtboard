@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { draughtsPiece } from './play-draughts/draughts-piece.interface';
+import { draughtsPiece } from '../play-draughts/draughts-piece.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class BoardService {
   constructor() { }
 
   generateBoard(): Array<any> { 
-    for (let i = 0; i < 8; i++) { 
+    for (let i = 0; i < this.boardLength; i++) { 
       let numrow = { A: "", B: "", C: "", D: "", E: "", F: "", G: "", H: ""};
       this.board.push(numrow);
     }
