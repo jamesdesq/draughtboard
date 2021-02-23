@@ -9,10 +9,21 @@ It was generated with [Angular CLI](https://github.com/angular/angular-cli) vers
 You can see a [hosted version of the software here](http://jamesd-draughts.s3-website.eu-west-2.amazonaws.com/).
 
 ## The rules: 
-- Click the "Who plays black" button to find out which player is playing black
+- Click the "Click to start button" button to find out which player is playing black. Black always plays first
 - Click a piece to select it, then click the square you want to move it to
 - The rules of draughts state that if a player can take a piece, they must do so. If you have a piece that's able to take one of your opponents pieces, and you try to select a different one, you'll see a message saying that you're not allowed to
+- If you get one of your pieces all the way to the opposite side, it will become a king, and be able to move in any direction
+- If you take all your opponent's pieces, you've won!
 
+## Still to implement
+
+There's one main requirement still to implement: 
+
+> "If, upon capturing a piece, another piece can be captured, they must also capture any subsequent pieces."
+
+However you should be able to see that on line 189 of the play-draughts.component.ts file there's a function called `additionalMoves`. It reuses the same functions that are used when a player selects a piece, and shouldn't take long to make usable. However, currently it returns false in any situation so it doesn't break anything. 
+
+It's also currently not possible for a king piece to take other pieces when moving against its usual direction.
 # Building, testing and deploying
 ## Development server
 
