@@ -27,8 +27,6 @@ export class BoardService {
     this.assignPieces(5, true, 'white-piece');
     this.assignPieces(6, false, 'white-piece');
     this.assignPieces(7, true, 'white-piece');
-
-    console.log(this.board);
     return this.board;
   }
 

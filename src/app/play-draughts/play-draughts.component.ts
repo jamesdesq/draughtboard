@@ -67,31 +67,24 @@ export class PlayDraughtsComponent implements OnInit {
     // Can't select if you've already selected!
     if (!this.selected.length) {
       
-      this.adjacents = [];
-      this.checkAdjacents(classes[1]);
-
-      // If there are any pieces of the in-play colour in adjacents
-      // we might *have* to play one of them.
-    
-      this.possibleTakers = [];
-
-      for (let adjacent of this.adjacents) { 
-
-        const takeable = this.checkTakeable(adjacent, colourInPlay);
-        if (takeable) {
-          this.possibleTakers.push(takeable);
-        }
-      }
-
       const selected: draughtsPiece = {
         yindex: yPos,
         xindex: xPos,
         colour: classes[1]
       }
+      
+      this.adjacents = [];
 
+      this.checkAdjacents(selected);
+
+      // If there are any pieces of the in-play colour in adjacents
+      // we might *have* to play one of them.
+    
       if (classes[3] && classes[3] === 'king') {
         selected.king = true;
       }
+
+      this.populatePossibleTakers();
 
       if (this.possibleTakers.length) {
         const posibleSelection = yPos+xPos;
@@ -104,6 +97,18 @@ export class PlayDraughtsComponent implements OnInit {
       }
       else {
         this.selected.push(selected);
+      }
+    }
+  }
+
+  populatePossibleTakers() {
+    this.possibleTakers = [];
+
+    for (let adjacent of this.adjacents) { 
+
+      const takeable = this.checkTakeable(adjacent, this.currentColour);
+      if (takeable) {
+        this.possibleTakers.push(takeable);
       }
     }
   }
@@ -149,49 +154,53 @@ export class PlayDraughtsComponent implements OnInit {
     return true;
   }
 
-  move(yPos, xPos, event): boolean | void {
+  move(yPos: number, xPos: string, event): boolean | void {
     if (this.selected.length > 0) { 
       const classes = event.target.className.split(" ");
-      console.log(classes);
-
       if (classes[2] !== 'occupied') { 
-        const adjacents = this.adjacentFactory(yPos, xPos, this.selected[0].colour);
-        this.selected[0].adjacents = adjacents;
         let movable: draughtsPiece = this.selected[0];
-        console.log('I am moveable', movable);
         if (this.possibleTakers.length > 0) { 
           this.takePieces(yPos, xPos, movable);
         }
         else if (!this.allowed(movable, [yPos, xPos])) {
           return false;  
         }
-        // Clear the last square
-        this.board[this.selected[0].yindex][this.selected[0].xindex] = "";
-        this.selected = [];
-        movable.yindex = yPos;
-        movable.xindex = xPos;
-        // Check if we need to make it a king
-        movable = this.makeKing(yPos, movable);
-        console.log('movable: ', movable);
-        this.board[yPos][xPos] = movable;
-        // Check if there are any more moves we need to do
+
         if (this.additionalMoves(movable)) { 
           this.messages.push('There are more pieces to take');
         }
-        // And flip the colour so it's the other player's turn.
-        this.currentColour = this.flipColour(this.currentColour);       
+        else { 
+          // Clear the last square
+          this.board[this.selected[0].yindex][this.selected[0].xindex] = "";
+          this.selected = [];
+          movable.yindex = yPos;
+          movable.xindex = xPos;
+          // Check if we need to make it a king
+          movable = this.makeKing(yPos, movable);
+          this.board[yPos][xPos] = movable;
+          // Check if there are any more moves we need to do
+          // And flip the colour so it's the other player's turn.
+          this.currentColour = this.flipColour(this.currentColour);     
+        } 
       }
     }
   }
 
   additionalMoves(movable: draughtsPiece): boolean { 
 
-    console.log('I am the movable piece', movable);
-
-    // Reset the adjacents list
     this.adjacents = [];
-    
 
+    this.checkAdjacents(movable);
+ 
+    this.populatePossibleTakers();
+
+    if (this.possibleTakers.length) {
+      const posibleSelection = movable.yindex+movable.xindex;
+      if (this.possibleTakers.includes(posibleSelection)) { 
+        this.messages.push('There are more pieces to take');
+        return false;   
+      }
+    }
     return false;
   }
 
@@ -261,23 +270,21 @@ export class PlayDraughtsComponent implements OnInit {
     }
   }
 
-  checkAdjacents(colour: string): void{
+  checkAdjacents(piece: draughtsPiece): void {
     // When we select a piece, we want to make sure there are no other pieces that must be played: 
-   for (let i = 0; i < this.board.length; i++) {
-     for (let xposition in this.board[i]) { 
-       if (this.board[i][xposition].colour === colour) { 
-           
-         const adjacent = this.adjacentFactory(i, xposition, colour, false); 
-         
+   for (let yPosition = 0; yPosition < this.board.length; yPosition++) {
+     for (let xposition in this.board[yPosition]) { 
+       if (this.board[yPosition][xposition].colour === piece.colour) { 
+         const adjacent = this.adjacentFactory(yPosition, xposition, piece.colour, false); 
          if (adjacent) { 
            this.adjacents.push(adjacent);
          }
        }  
      }
    }
- }
+  }
 
-   adjacentFactory(yPos: number, xPos: string, currentColour: string, king = false): Object | void { 
+  adjacentFactory(yPos: number, xPos: string, currentColour: string, king = false): Object | void { 
     const directions = ['left', 'right'];
     directions.forEach((direction) => {
       let adjacent = this.adjacentDirection(yPos, xPos, currentColour, direction);
@@ -311,7 +318,6 @@ export class PlayDraughtsComponent implements OnInit {
   }
 
   allowed(currentPiece: draughtsPiece, target: Array<any>): boolean {  
-    console.log(currentPiece);
     const sourceY = currentPiece.yindex;
     const sourceX = this.row.indexOf(currentPiece.xindex);
     const targetY = target[0];
